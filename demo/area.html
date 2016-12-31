@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title></title>
+    <style media="screen">
+        body {
+            background-color: #B3E5FC;
+            min-height: 200vh;
+            position: relative;
+        }
+
+        .refreshButton {
+            width: 100px;
+            height: 100px;
+            background-color: blue;
+            position: absolute;
+            left: 50%;
+            top: 0px;
+            /* margin: 50px; */
+            margin-left: -50px;
+        }
+
+        .refreshButton a {
+            font-size: 48px;
+            color: white;
+            display: inline-block;
+        }
+
+        .topText {
+            font-size: 36px;
+        }
+
+        html {
+            background: white;
+        }
+        .refresh-area{
+          width: 100%;
+   text-align: center;
+   font-size: 48px;
+   position: absolute;
+   bottom: 100%;
+
+        }
+    </style>
+</head>
+
+<body>
+    <!-- <div class="refreshButton js_refresh">
+        <a href="#">正</a>
+    </div> -->
+
+    <div class="refresh-area">
+        <p class="js_refreshText">\/下拉刷新</p>
+    </div>
+
+    <p class="topText">
+        我是顶部的分割线
+    </p>
+
+    <script type="text/javascript" src="http://cdn.bootcss.com/jquery/3.1.1/jquery.js"></script>
+    <script type="text/javascript" src="../js/dragRefresh2.js">
+    </script>
+    <script type="text/javascript">
+        // 事件：
+        // dragging 拖动中（往上或者往下）参数为百分比
+        // release 释放了手指
+        // loop 释放了手之后的循环函数
+
+        //接口：
+        // startLoop:进入循环状态
+        // endLoop ：结束循环状态
+
+
+        var a = $("body").dragRefresh({
+            top: 0,
+            bottom: 400
+        });
+        // a.state("loop");
+        var $text = $(".js_refreshText");
+        // todo:触发事件
+        // todo:开启和结束loop的函数
+        // todo：完成2个自带的效果
+        $(document).on("reset", function() {
+            // console.log("reset----");
+            $text.html("\\/下拉刷新");
+        });
+
+        $(document).on("loop", function() {
+            // console.log("外部监听到loop事件");
+            $text.html("刷新中");
+        });
+
+
+        $(document).on("dragging", function(e,progress) {
+            // console.log(progress);
+            if (33 < progress) {
+                $text.html("\\/下拉刷新");
+            } else {
+                $text.html("/\\释放刷新");
+            }
+        });
+    </script>
+</body>
+
+</html>

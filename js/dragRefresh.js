@@ -1,227 +1,199 @@
-function DragRefresh(options) {
+/*
+事件：
+ready：插件初始化完毕之后触发
+release:手指释放时触发 参数为一共拖动的距离
+reset:回到起始位置时触发
 
-    var temp = {
-        _startDragY: 0,
-        _isDragging: false,
-        _lastPostion: 0,
-        _currentState: undefined
+
+dragging: 拖拽过程中的事件，参数为所占的百分比[0-100] 只有当页面在最顶部的时候才会触发
+loop：循环事件、以参数loopFPS的频率调用
+retreating:(暂时不触发这个事件)
+
+// 接口
+startLoop
+stopLoop
+
+// 参数：
+top:起始位置 int -100
+bottom：结束位置 int 300
+loop : 大于这个位置就进入loop状态 int 200
+loopFPS: int
+
+*/
+
+function DragRefresh($element, option) {
+    var DEFAULTS = {
+        top: -100,
+        loopY: 200,
+        bottom: 300,
+        loopFPS: 24,
     }
 
-    this.data = $.extend({},
-        this.defaultOption,
-        options,
-        temp);
+    var OPTIONS = $.extend({}, DEFAULTS, option);
 
-    this._init();
-}
+    // 当前是否在拖拽中
+    var _isDragging = false;
+    // 开始触摸的y值坐标
+    var _startDragY = -1;
+    // 手指在屏幕上最后的Y坐标
+    var _lastY = -1;
+    // 当前状态的名字
+    var _currentState = "";
 
-DragRefresh.prototype.defaultOption = {
-    $this: $(),
-    top: -100,
-    bottom: 300,
-    loopFPS: 24,
-}
-
-DragRefresh.prototype.state = function(newState) {
-    var THIS = this;
-    if (undefined === newState) {
-        return THIS.data._currentState
-    }
-
-    if (undefined === THIS.data.states[newState]) {
-        return THIS.data._currentState
-    }
-
-    if (THIS.data.states[newState].change) {
-        THIS.data.states[newState].change(THIS.data.states[newState],
-            function() {
-                $(document).trigger($.Event(newState));
-                THIS.data._currentState = newState;
-            }, THIS.data.states[newState]);
-    } else {
-        $(document).trigger($.Event(newState));
-        THIS.data._currentState = newState;
-    }
-
-    // THIS.data._currentState = newState;
-    return THIS.data._currentState;
-}
-
-DragRefresh.prototype.addState = function(name, newState) {}
-
-DragRefresh.prototype.progress = function() {
-    // fixme:这个可能造成进度不是【0-100】的情况
-    return parseInt($refresh.position().top / (MAX - MIN) * 100);
-}
-
-// DragRefresh.prototype._position=function(){}
-
-DragRefresh.prototype._top = function() {
-    return this.data.$this.position().top;
-};
-
-DragRefresh.prototype._isTop = function() {
-    return 0 === $(document).scrollTop();
-}
-
-DragRefresh.prototype._looping = function() {
-  if("loop"!==this.state()){
-    console.log(this.state()+"不行，这不loop");
-    return ;
-  }
-  var THIS =this;
-  this.data.$this.trigger($.Event("loop"));
-  setTimeout(function(){THIS._looping();}, 1000 / 24);
-}
-
-DragRefresh.prototype._init = function() {
-    var THIS = this;
-    var $this = THIS.data.$this;
-    THIS.event = {};
-
-    var states = {
-        ready: {},
-        dragging: {},
-        loop: {
-            // update:function(){},
-            change: function(state, callback) {
-                // console.log("loop");
-
-                callback && callback();
-                //只要是loop的状态就一直调用回调函数
-                THIS._looping();
-            }
-        },
-        retreating: {},
-        reset: {
-            change: function(state, callback, from) {
-                // console.log("reset");
-                callback && callback();
-            }
-        },
-        // 注：release不一定触发loop，如果它高度不足的话，就会直接进入reset
-        release: {
-            position: 200,
-            // callback是在内置行为执行完之后立即调用的
-            change: function(state, callback, from) {
-                callback && callback();
-
-                var newTop = 0;
-                var newState = "";
-
-                if (state.position < THIS._top()) {
-                    newTop = state.position;
-                    // todo:这里应该改成开始loop函数
-                    // THIS.state("loop");
-                    newState = "loop";
-                    // 过了这个点，执行loop
-                } else {
-                    //没过，执行reset
-                    newTop = THIS.data.top;
-                    newState = "reset";
-                    // THIS.state("reset");
-                }
-
-                $this.animate({
-                    top: newTop
-                }, {
-                    progress: function() {
-                        // todo:调用回调函数
-                        // update( progress());
-                    },
-                    done: function() {
-                        THIS.state(newState);
-                    }
-                });
-            }
+    var _states = {};
+    $.each("ready release reset dragging loop".split(" "),
+        function(i, e) {
+            _states[e] = function(data) {}
+        });
+    _states["dragging"] = function(data) {
+        // console.log(data);
+        // console.log(this);
+    };
+    _states["release"] = function(data) {
+        // console.log(data);
+        // console.log(OPTIONS.loopY<_elementY()&& 0<data);
+        var newY = OPTIONS.top;
+        var newState = "";
+        if (OPTIONS.loopY < _elementY() && 0 < data) {
+            newY = OPTIONS.loopY;
+            newState = "loop";
+        } else {
+            newY = OPTIONS.top;
+            newState = "reset";
         }
+        $element.animate({
+            top: newY
+        }, {
+            progress: function() {
+                // 如果需要，可以在这里调用回退的动画函数
+            },
+            done: function() {
+                _state(newState);
+            }
+        });
+
     };
 
-    THIS.data.states = states;
-    $.each(states, function(i, e) {
-        THIS.data.states[i].name = i;
-    });
+    _states["loop"] = function(data) {
+        // console.log(_currentState + "是否loop？");
+        _looping();
+    };
+    // 返回当前文档是否在最顶部
+    // true或者false
+    function _isTop() {
+        return 0 === $(document).scrollTop();
+    }
 
-    // THIS.data.states = states;
+    function _elementY() {
+        return $element.position().top;
+    }
 
-    for (var i in states) {
-        THIS.event[i] = $.Event(i);
+    // 返回当前位置所占的百分比 int
+    function _progress() {
+        return parseInt(((OPTIONS.top + _elementY()) / OPTIONS.bottom) * 100);
+    }
+
+    // 当处于loop状态时，以每秒loopFPS的频率调用自己
+    function _looping(data) {
+      if ("loop" === _currentState) {
+          setTimeout(function(){
+            _looping();
+          },1000/OPTIONS.loopFPS);
+          $element.trigger($.Event("loop"),data);
+      }
+    }
+
+    //如果传入参数，并且该状态名存在，就切换状态并且触发事件，如果不存在就不改变并返回当前的事件名称
+    function _state(newState, data) {
+
+        // console.log(data);
+
+        if (_states[newState]) {
+            // console.log("改变状态：" + newState + "状态参数：");
+            // 先改变状态属性，等内置的部分处理完成之后，在触发事件;
+            _currentState = newState;
+            _states[newState].call($element, data)
+            $element.trigger($.Event(newState), data);
+        }
+
+        return _currentState;
+        // retturn
     }
 
     document.addEventListener("touchstart", function(event) {
-        if (!THIS._isTop()) {
-            THIS.data._isDragging = false;
+        if (!_isTop() || ("ready"!== _state() && "reset"!==_state())) {
+            _isDragging = false;
             return;
         }
-        THIS.data._isDragging = true;
-        THIS.data._startDragY = event.targetTouches[0].clientY;
-        // console.log(event);
-        // console.log(pageX);
+        _isDragging = true;
+        _lastY = _startDragY = event.targetTouches[0].clientY;
+
+        _state("dragging", _progress());
     });
 
     document.addEventListener("touchend", function(event) {
-        THIS.data._isDragging = false;
-        THIS.data._startDragY = 0;
+      if(!_isDragging){return;}
+
+        var distance = _lastY - _startDragY;
+        _isDragging = false;
+        _startDragY = -1;
+        _lastY = -1;
         // $(document).trigger(_events["release"]);
-        THIS.state("release");
+
+        // console.log(_lastY+"xxxxxxxxxxx"+_startDragY);
+        _state("release", distance);
     });
 
+    // 监听文档的拖拽事件
     document.addEventListener("touchmove", function(event) {
         // console.log("开始滑动");
         // console.log(event.detail);
-        if (!THIS.data._isDragging) {
+        if (!_isDragging) {
             return;
         }
 
+        // 现在触摸的位置
         var newPosition = event.targetTouches[0].clientY;
-        // console.log(newPosition-position);
-
-        if (newPosition < THIS.data._startDragY) {
+        _lastY = newPosition;
+        // 往上滑动，不做处理
+        if (newPosition < _startDragY) {
             return;
         }
+        event.preventDefault();
+        var distance = newPosition - _startDragY;
 
-        var change = 0;
-        if (THIS.data.lastPostion < newPosition) {
-            // 依然往下
-            // lastPostion=newPosition;
-            console.log("往下拖");
-            change = 4;
-        } else {
-            // 往回拖
-            console.log("往回拖");
-            change = -4;
-            event.preventDefault();
-        }
-
-        THIS.data.lastPostion = newPosition;
-        // console.log("依然往下");
-
-        if (THIS._top() < THIS.data.bottom) {
-            $this.css({
-                top: THIS._top() + change
+        // THIS.data._lastPostion = newPosition;
+        // console.log(THIS.data._lastPostion);
+        // console.log(distance);
+        // 还没到最底部就更新你位置并且触发事件
+        // debugger
+        if (_elementY() < OPTIONS.bottom) {
+            $element.css({
+                top: distance
             });
             // update(THIS.progress());
+            // todo:这个是不是要改为设置成dragging的状态？
+            // THIS.data.$this.trigger("dragging", THIS.progress());
+            _state("dragging", _progress());
         }
     });
-}
-DragRefresh.prototype.startLoop = function() {
-    this.state("loop");
-    return this;
+
+    var component = {
+        startLoop: function() {
+            return component;
+        },
+        stopLoop: function() {
+            return component;
+        }
+    };
+    _state("ready");
+    return component;
 }
 
-DragRefresh.prototype.stopLoop = function() {
-    this.state("reset");
-    return this;
-}
+
+
 $.fn.dragRefresh = function(options) {
-    options = options || {};
-    options.$this = $(this);
-    return new DragRefresh(options);
+    return new DragRefresh($(this), options);
 }
 
-
-
-
-// todo：完成2个自带的效果
-
-//目标：指定起始值和结束值，自动计算差值
+// call跟apply有什么区别？
