@@ -35,13 +35,13 @@
         html {
             background: white;
         }
-        .refresh-area{
-          width: 100%;
-   text-align: center;
-   font-size: 48px;
-   position: absolute;
-   bottom: 100%;
 
+        .refresh-area {
+            width: 100%;
+            text-align: center;
+            font-size: 48px;
+            position: absolute;
+            bottom: 100%;
         }
     </style>
 </head>
@@ -59,8 +59,9 @@
         我是顶部的分割线
     </p>
 
-    <script type="text/javascript" src="http://cdn.bootcss.com/jquery/3.1.1/jquery.js"></script>
-    <script type="text/javascript" src="../js/dragRefresh2.js">
+    <!-- <script type="text/javascript" src="http://cdn.bootcss.com/jquery/3.1.1/jquery.js"></script> -->
+    <script type="text/javascript" src="../js/jquery-2.2.0.min.js"></script>
+    <script type="text/javascript" src="../js/dragRefresh.js">
     </script>
     <script type="text/javascript">
         // 事件：
@@ -93,7 +94,7 @@
         });
 
 
-        $(document).on("dragging", function(e,progress) {
+        $(document).on("dragging", function(e, progress) {
             // console.log(progress);
             if (33 < progress) {
                 $text.html("\\/下拉刷新");
