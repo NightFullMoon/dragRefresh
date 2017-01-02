@@ -41,7 +41,9 @@ function DragRefresh($element, option) {
         // 定义了滑动距离与移动距离的函数
         // 参数为目前为止移动了多长的px
         // 返回元素应该移动的距离
-        move:function(distance){return distance;}
+        move: function(distance) {
+            return distance;
+        }
     }
 
     var OPTIONS = $.extend({}, DEFAULTS, option);
@@ -121,7 +123,7 @@ function DragRefresh($element, option) {
         $element.css("top", OPTIONS.loopY);
         // _looping();
         _state("looping");
-          // _looping();
+        // _looping();
     };
 
     _states["looping"] = function(data) {
@@ -140,7 +142,7 @@ function DragRefresh($element, option) {
 
     // 返回当前位置所占的百分比 int
     function _progress() {
-        // console.log(OPTIONS.top + _elementY());
+        // console.log( _elementY()-OPTIONS.top);
         return parseInt(((_elementY() - OPTIONS.top) / (OPTIONS.bottom - OPTIONS.top)) * 100);
     }
 
@@ -265,59 +267,114 @@ $.fn.dragRefresh.material = function(options) {
     // console.log("hhhhh ");
 }
 
-$.extend(true,{
+$.extend(true, {
     DragRefresh: {
         material: function(options) {
-          var $button = $('<div class="refresh-wrap js_refresh"><img src="../image/icon_refresh.png" alt="refresh" class="refresh-icon" /></div>');
-          $("body").append($button);
+            var $button = $('<div class="refresh-wrap js_refresh"><i class="refresh-icon refresh-icon-refresh"></i></div>');
+            $("body").append($button);
 
-var drag =          $button.dragRefresh({
-              top: -150,
-              loopY: 150,
-              stateCss: function(state) {
-                  // console.log(this);
-                  return "material-" + state;
-              },
-              onReady: function() {
-                  // console.log("I am ready!");
-              }
-          }).on("looping", function() {
-              // console.log("loop----");
-              var $icon = $(this).find(".refresh-icon");
-              var str = $icon.attr("style") || "";
-              var oldDeg = str.match(/transform:\srotateZ\((.*)?deg\)/) || [];
-              // console.log(oldDeg);
-              if (2 === oldDeg.length) {
-                  oldDeg = oldDeg[1];
-              } else {
-                  oldDeg = 0;
-              }
+            var MATERIAL_DEFAULT = {
+                top: -150,
+                loopY: 150,
+                stateCss: function(state) {
+                    // console.log(this);
+                    return "material-" + state;
+                },
+                onReady: function() {
+                    // console.log("I am ready!");
+                }
+            };
 
-              newDeg = (parseInt(oldDeg) + 20) % 360;
-              $icon.css({
-                  transform: "rotateZ(" + (newDeg) + "deg)",
-                  opacity:1
-              });
-          });
+            var MATERIAL_OPTIONS = $.extend({}, MATERIAL_DEFAULT, options);
 
-          // 也可以在初始化完成之后扩展
-          $button.on("dragging retreating", function(event, progress) {
-              // console.log("dragging事件"+progress);
-              var $icon = $(this).find(".refresh-icon");
-              // console.log(this);
-              $icon.css({
-                  transform: "rotateZ(" + (progress / 2) * 3.6 + "deg)",
-                  opacity: progress / 100
-              });
-          });
 
-          return drag;
+            var drag = $button.dragRefresh(MATERIAL_OPTIONS)
+                .on("looping", function() {
+                    // console.log("loop----");
+                    var $icon = $(this).find(".refresh-icon");
+                    var str = $icon.attr("style") || "";
+                    var oldDeg = str.match(/transform:\srotateZ\((.*)?deg\)/) || [];
+                    // console.log(oldDeg);
+                    if (2 === oldDeg.length) {
+                        oldDeg = oldDeg[1];
+                    } else {
+                        oldDeg = 0;
+                    }
+
+                    newDeg = (parseInt(oldDeg) + 20) % 360;
+                    $icon.css({
+                        transform: "rotateZ(" + (newDeg) + "deg)",
+                        opacity: 1
+                    });
+                });
+
+            // 也可以在初始化完成之后扩展
+            $button.on("dragging retreating", function(event, progress) {
+                // console.log("dragging事件"+progress);
+                var $icon = $(this).find(".refresh-icon");
+                // console.log(this);
+                $icon.css({
+                    transform: "rotateZ(" + (progress / 2) * 3.6 + "deg)",
+                    opacity: progress / 100
+                });
+            });
+
+            return drag;
         }
     }
 });
 
-$.extend(true,{
-  DragRefresh:{
-    text:function(){}
-  }
+$.extend(true, {
+    DragRefresh: {
+        body: function(options) {
+            var BODY_DEFAULT = {
+                top: 0,
+                loopY: 75,
+                bottom: 150,
+                stateCss: function(state) {
+                    return "body-" + state;
+                }
+            };
+            var BODY_OPTIONS = $.extend({}, BODY_DEFAULT, options);
+
+            var template = '<div class="refresh-area"><p><i class="refresh-icon"></i><span class="refresh-text js_refreshText"></span></p></div>';
+            var $node = $(template);
+            $("bdoy").append($node);
+            var $text = $(".js_refreshText");
+            var $icon = $(".refresh-icon");
+
+            var drag = $("body").dragRefresh(BODY_OPTIONS)
+                .on("reset", function() {
+                    $text.html("下拉刷新");
+                    $icon.show();
+                }).on("dragging", function(event, progress) {
+                    if (66 < progress) {
+                        $text.html("释放刷新");
+                        $icon.css({
+                            transform: "rotateZ(180deg)"
+                        });
+                    } else {
+                        $text.html("下拉刷新");
+                        $icon.css({
+                            transform: "rotateZ(0deg)"
+                        });
+                    }
+                }).on("looping", function() {
+                    $text.html("刷新中");
+                    var str = $icon.attr("style") || "";
+                    var oldDeg = str.match(/transform:\srotateZ\((.*)?deg\)/) || [];
+                    if (2 === oldDeg.length) {
+                        oldDeg = oldDeg[1];
+                    } else {
+                        oldDeg = 0;
+                    }
+
+                    newDeg = (parseInt(oldDeg) + 20) % 360;
+                    $icon.css({
+                        transform: "rotateZ(" + (newDeg) + "deg)"
+                    });
+                });
+                return drag;
+        }
+    }
 });

@@ -3,15 +3,54 @@
     height: 100px;
     position: absolute;
     left: 50%;
-    top: 0px;
+    top: 100px;
     margin-left: -50px;
     background-color: white;
     border-radius: 50%;
     box-shadow: 0px 9px 9px rgba(0, 0, 0, .16), 0px 9px 9px rgba(0, 0, 0, .23);
 }
 
-.refresh-wrap .refresh-icon {
+.refresh-wrap .refresh-icon-refresh {
+    /*top: 100px;*/
     width: 80%;
     height: 80%;
     margin: 10%;
+    background: url(../image/icon_refresh.png);
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    display: block;
+    top: 0px;
+}
+
+.refresh-area {
+    width: 100%;
+    text-align: center;
+    font-size: 36px;
+    /*line-height: 40px;*/
+    position: absolute;
+    bottom: 100%;
+    padding: 9px 0px;
+}
+
+.refresh-text{
+  color: #757575;
+}
+
+.refresh-icon {
+    width: 36px;
+    height: 36px;
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    display: inline-block;
+    /*vertical-align: middle;*/
+    background-image: url(../image/icon_downward.png);
+    position: relative;
+    top: 4px;
+}
+
+/*.text-dragging .refresh-icon, .text-ready .refresh-icon, .text-reset .refresh-icon{
+    background-image: url(../image/icon_downward.png);
+}*/
+.body-looping .refresh-icon{
+    background-image: url(../image/icon_loading.png);
 }
